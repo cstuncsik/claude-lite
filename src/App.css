@@ -1,0 +1,5 @@
+@import "tailwindcss";
+
+* {
+  scrollbar-width: thin;
+}
