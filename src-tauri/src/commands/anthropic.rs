@@ -16,6 +16,15 @@ struct AnthropicRequest {
     system: Option<String>,
     messages: Vec<AnthropicMessage>,
     stream: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    thinking: Option<ThinkingConfig>,
+}
+
+#[derive(Debug, Serialize)]
+struct ThinkingConfig {
+    #[serde(rename = "type")]
+    thinking_type: String,
+    budget_tokens: u32,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -75,6 +84,7 @@ pub async fn stream_chat_completion(
     api_key: String,
     settings: ProjectSettings,
     messages: Vec<Message>,
+    extended_thinking: bool,
 ) -> Result<String> {
     // Convert messages to Anthropic format
     let anthropic_messages: Vec<AnthropicMessage> = messages
@@ -126,6 +136,15 @@ pub async fn stream_chat_completion(
         })
         .collect();
 
+    let thinking_config = if extended_thinking {
+        Some(ThinkingConfig {
+            thinking_type: "enabled".to_string(),
+            budget_tokens: 10000,
+        })
+    } else {
+        None
+    };
+
     let request = AnthropicRequest {
         model: settings.model,
         max_tokens: settings.max_tokens,
@@ -133,6 +152,7 @@ pub async fn stream_chat_completion(
         system: settings.system_prompt,
         messages: anthropic_messages,
         stream: true,
+        thinking: thinking_config,
     };
 
     let client = reqwest::Client::new();
@@ -227,6 +247,7 @@ pub async fn generate_chat_title(
             content: MessageContent::Text(prompt),
         }],
         stream: false,
+        thinking: None,
     };
 
     let client = reqwest::Client::new();

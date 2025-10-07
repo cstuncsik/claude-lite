@@ -24,8 +24,8 @@ export const deleteChat = (chatId: string) => invoke('delete_chat', { chatId });
 
 // Messages
 export const listMessages = (chatId: string) => invoke<Message[]>('list_messages', { chatId });
-export const sendMessage = (chatId: string, content: string, projectId?: string, model?: string, images?: MessageImage[]) =>
-  invoke<Message>('send_message', { chatId, content, projectId: projectId || null, model: model || null, images: images || null });
+export const sendMessage = (chatId: string, content: string, projectId?: string, model?: string, images?: MessageImage[], extendedThinking?: boolean) =>
+  invoke<Message>('send_message', { chatId, content, projectId: projectId || null, model: model || null, images: images || null, extendedThinking: extendedThinking || false });
 
 // Streaming
 export const onStreamChunk = (callback: (chunk: StreamChunk) => void) => {

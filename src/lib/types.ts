@@ -32,6 +32,8 @@ export interface Message {
   role: 'user' | 'assistant';
   content: string;
   images?: MessageImage[];
+  model?: string;
+  extended_thinking?: boolean;
   created_at: string;
 }
 

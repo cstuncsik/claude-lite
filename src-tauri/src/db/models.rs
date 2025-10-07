@@ -24,7 +24,7 @@ pub struct ProjectSettings {
 }
 
 fn default_model() -> String {
-    "claude-sonnet-4-20250514".to_string()
+    "claude-sonnet-4-5-20250929".to_string()
 }
 
 fn default_max_tokens() -> u32 {
@@ -62,6 +62,8 @@ pub struct Message {
     pub role: String,
     pub content: String,
     pub images: Option<String>,
+    pub model: Option<String>,
+    pub extended_thinking: Option<i32>,
     pub created_at: String,
 }
 
@@ -74,6 +76,8 @@ impl Message {
             role: "user".to_string(),
             content,
             images: None,
+            model: None,
+            extended_thinking: None,
             created_at: now,
         }
     }
@@ -86,6 +90,8 @@ impl Message {
             role: "assistant".to_string(),
             content,
             images: None,
+            model: None,
+            extended_thinking: None,
             created_at: now,
         }
     }

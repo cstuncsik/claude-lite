@@ -3,9 +3,10 @@ import { useChatsStore } from '../store/chats';
 import { useProjectsStore } from '../store/projects';
 
 const MODELS = [
-  { id: 'claude-3-5-sonnet-20241022', name: 'Sonnet 4.5' },
-  { id: 'claude-3-5-haiku-20241022', name: 'Haiku 3.5' },
-  { id: 'claude-3-opus-20240229', name: 'Opus 3' },
+  { id: 'claude-sonnet-4-5-20250929', name: 'Sonnet 4.5' },
+  { id: 'claude-sonnet-4-20250514', name: 'Sonnet 4' },
+  { id: 'claude-opus-4-1-20250805', name: 'Opus 4.1' },
+  { id: 'claude-opus-4-20250514', name: 'Opus 4' },
 ];
 
 interface PastedImage {
@@ -88,7 +89,7 @@ export default function MessageInput() {
       textareaRef.current.blur();
     }
 
-    await sendMessage(message, currentProject?.id, selectedModel.id, images);
+    await sendMessage(message, currentProject?.id, selectedModel.id, images, extendedThinking);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -158,6 +159,9 @@ export default function MessageInput() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </button>
+              {extendedThinking && (
+                <span className="text-xs text-blue-400 font-medium">Extended thinking enabled</span>
+              )}
             </div>
 
             {/* Right Side - Model Selector + Send Button */}

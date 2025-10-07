@@ -8,6 +8,7 @@ interface ChatsState {
   messages: Message[];
   isLoading: boolean;
   isSending: boolean;
+  isThinking: boolean;
   streamingContent: string;
   error: string | null;
 
@@ -15,7 +16,7 @@ interface ChatsState {
   selectChat: (chat: Chat | null) => Promise<void>;
   createChat: (projectId?: string) => Promise<Chat>;
   deleteChat: (chatId: string) => Promise<void>;
-  sendMessage: (content: string, projectId?: string, model?: string, images?: MessageImage[]) => Promise<void>;
+  sendMessage: (content: string, projectId?: string, model?: string, images?: MessageImage[], extendedThinking?: boolean) => Promise<void>;
   appendStreamDelta: (delta: string) => void;
   finalizeStreamedMessage: () => void;
   clearMessages: () => void;
@@ -27,6 +28,7 @@ export const useChatsStore = create<ChatsState>((set, get) => ({
   messages: [],
   isLoading: false,
   isSending: false,
+  isThinking: false,
   streamingContent: '',
   error: null,
 
@@ -88,7 +90,7 @@ export const useChatsStore = create<ChatsState>((set, get) => ({
     }
   },
 
-  sendMessage: async (content, projectId, model, images) => {
+  sendMessage: async (content, projectId, model, images, extendedThinking) => {
     const { currentChat } = get();
     if (!currentChat) return;
 
@@ -99,27 +101,31 @@ export const useChatsStore = create<ChatsState>((set, get) => ({
       role: 'user',
       content,
       images,
+      model,
+      extended_thinking: extendedThinking,
       created_at: new Date().toISOString(),
     };
 
     set((state) => ({
       messages: [...state.messages, userMessage],
       isSending: true,
+      isThinking: extendedThinking || false,
       streamingContent: '',
       error: null,
     }));
 
     try {
-      await api.sendMessage(currentChat.id, content, projectId, model, images);
+      await api.sendMessage(currentChat.id, content, projectId, model, images, extendedThinking);
       // Title will be auto-generated in finalizeStreamedMessage after assistant responds
     } catch (error) {
-      set({ error: String(error), isSending: false });
+      set({ error: String(error), isSending: false, isThinking: false });
     }
   },
 
   appendStreamDelta: (delta) => {
     set((state) => ({
       streamingContent: state.streamingContent + delta,
+      isThinking: false, // Once we start getting content, thinking is done
     }));
   },
 
@@ -140,6 +146,7 @@ export const useChatsStore = create<ChatsState>((set, get) => ({
         messages: updatedMessages,
         streamingContent: '',
         isSending: false,
+        isThinking: false,
       });
 
       // Auto-generate title after first exchange (user + assistant message)

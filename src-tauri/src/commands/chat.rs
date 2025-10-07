@@ -66,6 +66,7 @@ pub async fn send_message(
     project_id: Option<String>,
     model: Option<String>,
     images: Option<Vec<MessageImage>>,
+    extended_thinking: Option<bool>,
 ) -> Result<Message> {
     // Get API key
     let api_key = state.get_api_key().ok_or_else(|| AppError {
@@ -86,17 +87,24 @@ pub async fn send_message(
         settings.model = m;
     }
 
-    // Save user message with images
+    // Increase max_tokens if extended thinking is enabled
+    if extended_thinking.unwrap_or(false) && settings.max_tokens < 12000 {
+        settings.max_tokens = 16000;
+    }
+
+    // Save user message with images and metadata
     let images_json = images.as_ref().map(|imgs| serde_json::to_string(imgs).ok()).flatten();
     let mut user_message = Message::new_user(chat_id.clone(), content);
     user_message.images = images_json;
+    user_message.model = Some(settings.model.clone());
+    user_message.extended_thinking = Some(if extended_thinking.unwrap_or(false) { 1 } else { 0 });
     db::create_message(&state.db, user_message.clone()).await?;
 
     // Get message history
     let messages = db::list_messages(&state.db, &chat_id).await?;
 
     // Stream response from Claude
-    let assistant_content = stream_chat_completion(app, api_key, settings, messages.clone()).await?;
+    let assistant_content = stream_chat_completion(app, api_key, settings, messages.clone(), extended_thinking.unwrap_or(false)).await?;
 
     // Save assistant message
     let assistant_message = Message::new_assistant(chat_id.clone(), assistant_content);
