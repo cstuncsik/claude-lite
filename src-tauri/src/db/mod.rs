@@ -188,13 +188,14 @@ pub async fn create_message(pool: &SqlitePool, message: Message) -> Result<()> {
     let now = Utc::now().to_rfc3339();
 
     sqlx::query(
-        "INSERT INTO messages (id, chat_id, role, content, images, model, extended_thinking, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+        "INSERT INTO messages (id, chat_id, role, content, images, documents, model, extended_thinking, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
     )
     .bind(&message.id)
     .bind(&message.chat_id)
     .bind(&message.role)
     .bind(&message.content)
     .bind(&message.images)
+    .bind(&message.documents)
     .bind(&message.model)
     .bind(&message.extended_thinking)
     .bind(&message.created_at)
@@ -213,7 +214,7 @@ pub async fn create_message(pool: &SqlitePool, message: Message) -> Result<()> {
 
 pub async fn list_messages(pool: &SqlitePool, chat_id: &str) -> Result<Vec<Message>> {
     let messages = sqlx::query_as::<_, Message>(
-        "SELECT id, chat_id, role, content, images, model, extended_thinking, created_at FROM messages WHERE chat_id = ? ORDER BY created_at ASC",
+        "SELECT id, chat_id, role, content, images, documents, model, extended_thinking, created_at FROM messages WHERE chat_id = ? ORDER BY created_at ASC",
     )
     .bind(chat_id)
     .fetch_all(pool)

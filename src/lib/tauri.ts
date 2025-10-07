@@ -1,6 +1,6 @@
 import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
-import type { Chat, Message, MessageImage, Project, ProjectSettings, StreamChunk } from './types';
+import type { Chat, Message, MessageImage, MessageDocument, Project, ProjectSettings, StreamChunk } from './types';
 
 // Projects
 export const listProjects = () => invoke<Project[]>('list_projects');
@@ -24,8 +24,16 @@ export const deleteChat = (chatId: string) => invoke('delete_chat', { chatId });
 
 // Messages
 export const listMessages = (chatId: string) => invoke<Message[]>('list_messages', { chatId });
-export const sendMessage = (chatId: string, content: string, projectId?: string, model?: string, images?: MessageImage[], extendedThinking?: boolean) =>
-  invoke<Message>('send_message', { chatId, content, projectId: projectId || null, model: model || null, images: images || null, extendedThinking: extendedThinking || false });
+export const sendMessage = (chatId: string, content: string, projectId?: string, model?: string, images?: MessageImage[], extendedThinking?: boolean, documents?: MessageDocument[]) =>
+  invoke<Message>('send_message', {
+    chatId,
+    content,
+    projectId: projectId || null,
+    model: model || null,
+    images: images || null,
+    extendedThinking: extendedThinking || false,
+    documents: documents || null
+  });
 
 // Streaming
 export const onStreamChunk = (callback: (chunk: StreamChunk) => void) => {

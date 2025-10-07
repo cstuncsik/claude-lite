@@ -57,6 +57,13 @@ pub struct MessageImage {
     media_type: String,
 }
 
+#[derive(serde::Deserialize, serde::Serialize)]
+pub struct MessageDocument {
+    data: String,
+    media_type: String,
+    name: String,
+}
+
 #[tauri::command]
 pub async fn send_message(
     app: AppHandle,
@@ -67,6 +74,7 @@ pub async fn send_message(
     model: Option<String>,
     images: Option<Vec<MessageImage>>,
     extended_thinking: Option<bool>,
+    documents: Option<Vec<MessageDocument>>,
 ) -> Result<Message> {
     // Get API key
     let api_key = state.get_api_key().ok_or_else(|| AppError {
@@ -92,10 +100,12 @@ pub async fn send_message(
         settings.max_tokens = 16000;
     }
 
-    // Save user message with images and metadata
+    // Save user message with images, documents and metadata
     let images_json = images.as_ref().map(|imgs| serde_json::to_string(imgs).ok()).flatten();
+    let documents_json = documents.as_ref().map(|docs| serde_json::to_string(docs).ok()).flatten();
     let mut user_message = Message::new_user(chat_id.clone(), content);
     user_message.images = images_json;
+    user_message.documents = documents_json;
     user_message.model = Some(settings.model.clone());
     user_message.extended_thinking = Some(if extended_thinking.unwrap_or(false) { 1 } else { 0 });
     db::create_message(&state.db, user_message.clone()).await?;

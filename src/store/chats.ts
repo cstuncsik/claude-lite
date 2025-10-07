@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { Chat, Message, MessageImage } from '../lib/types';
+import type { Chat, Message, MessageImage, MessageDocument } from '../lib/types';
 import * as api from '../lib/tauri';
 
 interface ChatsState {
@@ -16,7 +16,7 @@ interface ChatsState {
   selectChat: (chat: Chat | null) => Promise<void>;
   createChat: (projectId?: string) => Promise<Chat>;
   deleteChat: (chatId: string) => Promise<void>;
-  sendMessage: (content: string, projectId?: string, model?: string, images?: MessageImage[], extendedThinking?: boolean) => Promise<void>;
+  sendMessage: (content: string, projectId?: string, model?: string, images?: MessageImage[], extendedThinking?: boolean, documents?: MessageDocument[]) => Promise<void>;
   appendStreamDelta: (delta: string) => void;
   finalizeStreamedMessage: () => void;
   clearMessages: () => void;
@@ -90,7 +90,7 @@ export const useChatsStore = create<ChatsState>((set, get) => ({
     }
   },
 
-  sendMessage: async (content, projectId, model, images, extendedThinking) => {
+  sendMessage: async (content, projectId, model, images, extendedThinking, documents) => {
     const { currentChat } = get();
     if (!currentChat) return;
 
@@ -101,6 +101,7 @@ export const useChatsStore = create<ChatsState>((set, get) => ({
       role: 'user',
       content,
       images,
+      documents,
       model,
       extended_thinking: extendedThinking,
       created_at: new Date().toISOString(),
@@ -115,7 +116,7 @@ export const useChatsStore = create<ChatsState>((set, get) => ({
     }));
 
     try {
-      await api.sendMessage(currentChat.id, content, projectId, model, images, extendedThinking);
+      await api.sendMessage(currentChat.id, content, projectId, model, images, extendedThinking, documents);
       // Title will be auto-generated in finalizeStreamedMessage after assistant responds
     } catch (error) {
       set({ error: String(error), isSending: false, isThinking: false });

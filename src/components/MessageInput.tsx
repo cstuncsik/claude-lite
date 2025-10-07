@@ -9,21 +9,24 @@ const MODELS = [
   { id: 'claude-opus-4-20250514', name: 'Opus 4' },
 ];
 
-interface PastedImage {
+interface AttachedFile {
   id: string;
   dataUrl: string;
   file: File;
+  type: 'image' | 'document' | 'text';
+  textContent?: string;
 }
 
 export default function MessageInput() {
   const [input, setInput] = useState('');
   const [showModelSelector, setShowModelSelector] = useState(false);
   const [extendedThinking, setExtendedThinking] = useState(false);
-  const [pastedImages, setPastedImages] = useState<PastedImage[]>([]);
+  const [attachedFiles, setAttachedFiles] = useState<AttachedFile[]>([]);
   const { currentChat, sendMessage, isSending } = useChatsStore();
   const { currentProject } = useProjectsStore();
   const [selectedModel, setSelectedModel] = useState(MODELS[0]);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const adjustHeight = () => {
     const textarea = textareaRef.current;
@@ -43,6 +46,17 @@ export default function MessageInput() {
     }
   }, [currentChat]);
 
+  const isImageFile = (file: File) => file.type.startsWith('image/');
+  const isDocumentFile = (file: File) => {
+    // API only supports PDF for document type
+    return file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
+  };
+  const isTextFile = (file: File) => {
+    const textTypes = ['text/plain', 'text/markdown', 'text/csv', 'text/html', 'application/json'];
+    const textExtensions = ['.txt', '.md', '.csv', '.html', '.json', '.js', '.ts', '.tsx', '.jsx', '.css', '.py', '.java', '.c', '.cpp', '.rs', '.go'];
+    return textTypes.includes(file.type) || textExtensions.some(ext => file.name.toLowerCase().endsWith(ext));
+  };
+
   const handlePaste = async (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
     const items = e.clipboardData.items;
 
@@ -51,37 +65,122 @@ export default function MessageInput() {
         e.preventDefault();
         const file = items[i].getAsFile();
         if (file) {
-          const reader = new FileReader();
-          reader.onload = (event) => {
-            const dataUrl = event.target?.result as string;
-            setPastedImages(prev => [...prev, {
-              id: Math.random().toString(36).substr(2, 9),
-              dataUrl,
-              file
-            }]);
-          };
-          reader.readAsDataURL(file);
+          addFile(file);
         }
       }
     }
   };
 
-  const removeImage = (id: string) => {
-    setPastedImages(prev => prev.filter(img => img.id !== id));
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files) {
+      Array.from(files).forEach(file => addFile(file));
+    }
+    // Reset input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const addFile = (file: File) => {
+    // Check if image
+    if (isImageFile(file)) {
+      if (file.size > 5 * 1024 * 1024) {
+        alert('Image must be under 5MB');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const dataUrl = event.target?.result as string;
+        setAttachedFiles(prev => [...prev, {
+          id: Math.random().toString(36).substr(2, 9),
+          dataUrl,
+          file,
+          type: 'image'
+        }]);
+      };
+      reader.readAsDataURL(file);
+    }
+    // Check if document (PDF only)
+    else if (isDocumentFile(file)) {
+      if (file.size > 32 * 1024 * 1024) {
+        alert('PDF must be under 32MB');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const dataUrl = event.target?.result as string;
+        setAttachedFiles(prev => [...prev, {
+          id: Math.random().toString(36).substr(2, 9),
+          dataUrl,
+          file,
+          type: 'document'
+        }]);
+      };
+      reader.readAsDataURL(file);
+    }
+    // Check if text file
+    else if (isTextFile(file)) {
+      if (file.size > 1 * 1024 * 1024) {
+        alert('Text file must be under 1MB');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const textContent = event.target?.result as string;
+        // Create a data URL for preview (not sent to API)
+        const blob = new Blob([textContent], { type: 'text/plain' });
+        const dataUrl = URL.createObjectURL(blob);
+        setAttachedFiles(prev => [...prev, {
+          id: Math.random().toString(36).substr(2, 9),
+          dataUrl,
+          file,
+          type: 'text',
+          textContent
+        }]);
+      };
+      reader.readAsText(file);
+    } else {
+      alert('Unsupported file type. Supported: Images (JPEG, PNG, GIF, WebP), PDF documents, and text files (TXT, MD, CSV, HTML, JSON, code files)');
+    }
+  };
+
+  const removeFile = (id: string) => {
+    setAttachedFiles(prev => prev.filter(f => f.id !== id));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if ((!input.trim() && pastedImages.length === 0) || !currentChat || isSending) return;
+    if ((!input.trim() && attachedFiles.length === 0) || !currentChat || isSending) return;
 
-    const message = input.trim();
-    const images = pastedImages.map(img => ({
-      data: img.dataUrl.split(',')[1], // Remove data:image/xxx;base64, prefix
-      media_type: img.file.type
-    }));
+    let messageContent = input.trim();
+
+    // Add text file contents to message
+    const textFiles = attachedFiles.filter(f => f.type === 'text');
+    if (textFiles.length > 0) {
+      const textFilesContent = textFiles
+        .map(f => `\n\n---\nFile: ${f.file.name}\n\`\`\`\n${f.textContent}\n\`\`\``)
+        .join('\n');
+      messageContent = messageContent + textFilesContent;
+    }
+
+    const images = attachedFiles
+      .filter(f => f.type === 'image')
+      .map(f => ({
+        data: f.dataUrl.split(',')[1],
+        media_type: f.file.type
+      }));
+
+    const documents = attachedFiles
+      .filter(f => f.type === 'document')
+      .map(f => ({
+        data: f.dataUrl.split(',')[1],
+        media_type: f.file.type,
+        name: f.file.name
+      }));
 
     setInput('');
-    setPastedImages([]);
+    setAttachedFiles([]);
 
     // Reset textarea height and blur
     if (textareaRef.current) {
@@ -89,7 +188,7 @@ export default function MessageInput() {
       textareaRef.current.blur();
     }
 
-    await sendMessage(message, currentProject?.id, selectedModel.id, images, extendedThinking);
+    await sendMessage(messageContent, currentProject?.id, selectedModel.id, images, extendedThinking, documents);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -117,19 +216,39 @@ export default function MessageInput() {
             style={{ minHeight: '56px', maxHeight: '200px' }}
           />
 
-          {/* Image Previews */}
-          {pastedImages.length > 0 && (
+          {/* File Previews */}
+          {attachedFiles.length > 0 && (
             <div className="flex flex-wrap gap-2 px-4 pb-2">
-              {pastedImages.map((image) => (
-                <div key={image.id} className="relative group">
-                  <img
-                    src={image.dataUrl}
-                    alt="Pasted"
-                    className="w-20 h-20 object-cover rounded-lg border border-slate-600"
-                  />
+              {attachedFiles.map((file) => (
+                <div key={file.id} className="relative group">
+                  {file.type === 'image' ? (
+                    <img
+                      src={file.dataUrl}
+                      alt="Attached"
+                      className="w-20 h-20 object-cover rounded-lg border border-slate-600"
+                    />
+                  ) : file.type === 'text' ? (
+                    <div className="w-20 h-20 flex flex-col items-center justify-center rounded-lg border border-green-600/50 bg-green-900/20 p-2">
+                      <svg className="w-8 h-8 text-green-400 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                      <span className="text-xs text-green-400 text-center truncate w-full">
+                        {file.file.name.split('.').pop()?.toUpperCase()}
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="w-20 h-20 flex flex-col items-center justify-center rounded-lg border border-slate-600 bg-slate-800/50 p-2">
+                      <svg className="w-8 h-8 text-blue-400 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                      <span className="text-xs text-slate-400 text-center truncate w-full">
+                        {file.file.name.split('.').pop()?.toUpperCase()}
+                      </span>
+                    </div>
+                  )}
                   <button
                     type="button"
-                    onClick={() => removeImage(image.id)}
+                    onClick={() => removeFile(file.id)}
                     className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
                   >
                     <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -143,8 +262,27 @@ export default function MessageInput() {
 
           {/* Bottom Bar */}
           <div className="flex items-center justify-between px-4 pb-3 pt-1">
-            {/* Left Side - Extended Thinking Toggle */}
+            {/* Left Side - Attach File + Extended Thinking Toggle */}
             <div className="flex items-center gap-2">
+              <input
+                ref={fileInputRef}
+                type="file"
+                onChange={handleFileSelect}
+                accept="image/*,.pdf,.txt,.md,.csv,.html,.json,.js,.ts,.tsx,.jsx,.css,.py,.java,.c,.cpp,.rs,.go"
+                multiple
+                className="hidden"
+              />
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={!currentChat || isSending}
+                className="p-1.5 rounded-lg transition-colors cursor-pointer text-slate-500 hover:text-slate-400 hover:bg-slate-800/50 disabled:opacity-50 disabled:cursor-not-allowed"
+                title="Attach file"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                </svg>
+              </button>
               <button
                 type="button"
                 onClick={() => setExtendedThinking(!extendedThinking)}

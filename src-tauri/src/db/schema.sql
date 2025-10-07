@@ -22,6 +22,7 @@ CREATE TABLE IF NOT EXISTS messages (
   role TEXT NOT NULL CHECK(role IN ('user', 'assistant')),
   content TEXT NOT NULL,
   images TEXT,
+  documents TEXT,
   model TEXT,
   extended_thinking INTEGER DEFAULT 0,
   created_at TEXT NOT NULL

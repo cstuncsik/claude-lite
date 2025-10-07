@@ -26,12 +26,19 @@ export interface MessageImage {
   media_type: string;
 }
 
+export interface MessageDocument {
+  data: string; // base64 encoded
+  media_type: string;
+  name: string;
+}
+
 export interface Message {
   id: string;
   chat_id: string;
   role: 'user' | 'assistant';
   content: string;
   images?: MessageImage[];
+  documents?: MessageDocument[];
   model?: string;
   extended_thinking?: boolean;
   created_at: string;

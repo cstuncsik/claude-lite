@@ -43,10 +43,22 @@ enum ContentBlock {
     Image {
         source: ImageSource,
     },
+    #[serde(rename = "document")]
+    Document {
+        source: DocumentSource,
+    },
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 struct ImageSource {
+    #[serde(rename = "type")]
+    source_type: String,
+    media_type: String,
+    data: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct DocumentSource {
     #[serde(rename = "type")]
     source_type: String,
     media_type: String,
@@ -90,22 +102,22 @@ pub async fn stream_chat_completion(
     let anthropic_messages: Vec<AnthropicMessage> = messages
         .iter()
         .map(|m| {
-            let content = if let Some(images_json) = &m.images {
-                // Parse images JSON
-                if let Ok(images) = serde_json::from_str::<Vec<serde_json::Value>>(images_json) {
-                    if images.is_empty() {
-                        MessageContent::Text(m.content.clone())
-                    } else {
-                        let mut blocks = Vec::new();
+            let has_images = m.images.as_ref().map(|s| !s.is_empty()).unwrap_or(false);
+            let has_documents = m.documents.as_ref().map(|s| !s.is_empty()).unwrap_or(false);
 
-                        // Add text first if present
-                        if !m.content.is_empty() {
-                            blocks.push(ContentBlock::Text {
-                                text: m.content.clone(),
-                            });
-                        }
+            let content = if has_images || has_documents {
+                let mut blocks = Vec::new();
 
-                        // Add images
+                // Add text first if present
+                if !m.content.is_empty() {
+                    blocks.push(ContentBlock::Text {
+                        text: m.content.clone(),
+                    });
+                }
+
+                // Add images
+                if let Some(images_json) = &m.images {
+                    if let Ok(images) = serde_json::from_str::<Vec<serde_json::Value>>(images_json) {
                         for image in images {
                             if let (Some(data), Some(media_type)) = (
                                 image.get("data").and_then(|v| v.as_str()),
@@ -120,11 +132,30 @@ pub async fn stream_chat_completion(
                                 });
                             }
                         }
-                        MessageContent::Blocks(blocks)
                     }
-                } else {
-                    MessageContent::Text(m.content.clone())
                 }
+
+                // Add documents
+                if let Some(documents_json) = &m.documents {
+                    if let Ok(documents) = serde_json::from_str::<Vec<serde_json::Value>>(documents_json) {
+                        for document in documents {
+                            if let (Some(data), Some(media_type)) = (
+                                document.get("data").and_then(|v| v.as_str()),
+                                document.get("media_type").and_then(|v| v.as_str()),
+                            ) {
+                                blocks.push(ContentBlock::Document {
+                                    source: DocumentSource {
+                                        source_type: "base64".to_string(),
+                                        media_type: media_type.to_string(),
+                                        data: data.to_string(),
+                                    },
+                                });
+                            }
+                        }
+                    }
+                }
+
+                MessageContent::Blocks(blocks)
             } else {
                 MessageContent::Text(m.content.clone())
             };

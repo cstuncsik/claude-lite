@@ -113,6 +113,35 @@ export default function ChatView() {
                   }
                   return null;
                 })()}
+
+                {/* Display documents if present */}
+                {message.documents && (() => {
+                  try {
+                    const documents = typeof message.documents === 'string'
+                      ? JSON.parse(message.documents)
+                      : message.documents;
+                    if (Array.isArray(documents) && documents.length > 0) {
+                      return (
+                        <div className="flex flex-wrap gap-2 mb-3">
+                          {documents.map((doc: any, idx: number) => (
+                            <div
+                              key={idx}
+                              className="flex items-center gap-2 px-3 py-2 bg-slate-800/50 rounded-lg border border-slate-600"
+                            >
+                              <svg className="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                              </svg>
+                              <span className="text-sm text-slate-300">{doc.name}</span>
+                            </div>
+                          ))}
+                        </div>
+                      );
+                    }
+                  } catch (e) {
+                    console.error('Failed to parse documents:', e);
+                  }
+                  return null;
+                })()}
                 <div className={`prose prose-invert max-w-none ${message.role === 'user' ? 'prose-p:text-white prose-headings:text-white prose-strong:text-white' : ''}`}>
                   <ReactMarkdown
                     components={{
