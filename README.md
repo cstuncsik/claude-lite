@@ -4,7 +4,7 @@ A lightweight desktop client for Claude AI with local data persistence.
 
 > ⚠️ **Note**: This is not a production-ready application. It's a vibe coding experiment and learning project.
 
-<img width="1413" height="953" alt="CleanShot 2025-10-17 at 09 47 05" src="https://github.com/user-attachments/assets/6221f274-d2db-4ed1-8b5f-f30c8183ff97" />
+<img width="1407" height="711" alt="CleanShot 2025-10-17 at 09 48 03" src="https://github.com/user-attachments/assets/e8e2d87e-09a0-41c5-9d6d-702f22034443" />
 
 ## Features
 
