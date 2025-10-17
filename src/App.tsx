@@ -24,7 +24,7 @@ function App() {
   }, []);
 
   return (
-    <div className="flex h-full bg-linear-to-t from-slate-950 to-slate-900 text-white overflow-hidden">
+    <div className="flex h-full bg-linear-to-t from-teal-950 to-slate-900 text-white overflow-hidden">
       <Sidebar />
       <div className="flex-1 flex flex-col min-w-0 min-h-full overflow-hidden">
         <ChatView />

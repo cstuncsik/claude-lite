@@ -42,18 +42,18 @@ export default function ChatHistory({ isOpen, onClose }: ChatHistoryProps) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-      <div className="w-full max-w-2xl max-h-[80vh] bg-gradient-to-b from-slate-900 to-slate-800 rounded-2xl shadow-2xl border border-slate-700/50 flex flex-col">
+      <div className="w-full max-w-2xl max-h-[80vh] bg-gradient-to-b from-teal-900 to-slate-800 rounded-2xl shadow-2xl border border-slate-700/50 flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-slate-700/50">
           <div className="flex items-center gap-3">
-            <svg className="w-6 h-6 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-6 h-6 text-orange-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             <h2 className="text-xl font-bold text-white">Your chat history</h2>
           </div>
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-white transition-colors cursor-pointer"
+            className="text-teal-400 hover:text-white transition-colors cursor-pointer"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -64,7 +64,7 @@ export default function ChatHistory({ isOpen, onClose }: ChatHistoryProps) {
         {/* Search */}
         <div className="p-4 border-b border-slate-700/50">
           <div className="relative">
-            <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
             <input
@@ -80,12 +80,12 @@ export default function ChatHistory({ isOpen, onClose }: ChatHistoryProps) {
 
         {/* Chat List */}
         <div className="flex-1 overflow-y-auto p-4">
-          <div className="text-xs text-slate-400 mb-3">
+          <div className="text-xs text-teal-400 mb-3">
             {filteredChats.length} chat{filteredChats.length !== 1 ? 's' : ''} with Claude
           </div>
 
           {filteredChats.length === 0 ? (
-            <div className="text-center py-12 text-slate-500">
+            <div className="text-center py-12 text-teal-500">
               {searchQuery ? 'No chats found' : 'No chats yet'}
             </div>
           ) : (
@@ -98,16 +98,16 @@ export default function ChatHistory({ isOpen, onClose }: ChatHistoryProps) {
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-medium text-white mb-1 truncate group-hover:text-blue-400 transition-colors">
+                      <h3 className="font-medium text-white mb-1 truncate group-hover:text-teal-300 transition-colors">
                         {chat.title}
                       </h3>
-                      <div className="flex items-center gap-2 text-xs text-slate-400">
+                      <div className="flex items-center gap-2 text-xs text-teal-400">
                         <span>{formatDate(chat.updated_at)}</span>
                         <span>•</span>
                         <span>{getProjectName(chat.project_id)}</span>
                       </div>
                     </div>
-                    <svg className="w-5 h-5 text-slate-500 group-hover:text-blue-400 transition-colors shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-5 h-5 text-teal-500 group-hover:text-teal-300 transition-colors shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                     </svg>
                   </div>
@@ -118,7 +118,7 @@ export default function ChatHistory({ isOpen, onClose }: ChatHistoryProps) {
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-slate-700/50 text-xs text-slate-500 text-center">
+        <div className="p-4 border-t border-slate-700/50 text-xs text-teal-500 text-center">
           Press <kbd className="px-2 py-1 bg-slate-800 rounded border border-slate-700 font-mono">Esc</kbd> to close
         </div>
       </div>

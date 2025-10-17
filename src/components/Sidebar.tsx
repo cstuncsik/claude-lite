@@ -15,8 +15,8 @@ const ChatItem = memo(({ chat, isActive, onSelect, onDelete }: {
       onClick={onSelect}
       className={`w-full text-left px-3 py-2.5 rounded-lg mb-1.5 text-sm transition-colors duration-150 cursor-pointer border ${
         isActive
-          ? 'bg-blue-600/20 text-white border-blue-500/30'
-          : 'text-slate-300 hover:bg-slate-700/40 hover:text-white border-transparent'
+          ? 'bg-teal-500/20 text-white border-teal-400/30'
+          : 'text-teal-300 hover:bg-slate-700/40 hover:text-white border-transparent'
       }`}
     >
       <span className="flex items-center gap-2 pr-6">
@@ -92,20 +92,20 @@ export default function Sidebar() {
   };
 
   return (
-    <div className="w-64 bg-gradient-to-b from-slate-900 to-slate-800 border-r border-slate-700/50 flex flex-col h-full shrink-0 shadow-2xl">
+    <div className="w-64 bg-gradient-to-b from-teal-900 to-slate-800 border-r border-slate-700/50 flex flex-col h-full shrink-0 shadow-2xl">
       {/* Header */}
       <div className="p-4 border-b border-slate-700/50 bg-slate-900/50">
-        <h1 className="text-xl font-bold bg-gradient-to-r from-blue-400 to-violet-400 bg-clip-text text-transparent">
+        <h1 className="text-xl font-bold bg-gradient-to-r from-teal-300 to-orange-300 bg-clip-text text-transparent">
           Claude Lite
         </h1>
-        <p className="text-xs text-slate-400 mt-1">AI Chat Client</p>
+        <p className="text-xs text-teal-400 mt-1">AI Chat Client</p>
       </div>
 
       {/* New Chat Button */}
       <div className="p-4">
         <button
           onClick={handleNewChat}
-          className="w-full py-2.5 px-4 bg-gradient-to-r from-blue-600 to-violet-600 hover:from-blue-500 hover:to-violet-500 text-white rounded-xl font-medium shadow-lg shadow-blue-900/30 transition-all duration-200 transform cursor-pointer"
+          className="w-full py-2.5 px-4 bg-gradient-to-r from-teal-500 to-orange-500 hover:from-teal-400 hover:to-orange-400 text-white rounded-xl font-medium shadow-lg shadow-blue-900/30 transition-all duration-200 transform cursor-pointer"
         >
           <span className="flex items-center justify-start gap-2">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -120,10 +120,10 @@ export default function Sidebar() {
       <div className="flex-1 overflow-y-auto">
         <div className="px-4 py-2">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Projects</h2>
+            <h2 className="text-xs font-bold text-teal-400 uppercase tracking-wider">Projects</h2>
             <button
               onClick={() => setShowNewProject(!showNewProject)}
-              className="text-slate-400 hover:text-white hover:bg-slate-700/50 rounded-lg p-1.5 transition-all cursor-pointer"
+              className="text-teal-400 hover:text-white hover:bg-slate-700/50 rounded-lg p-1.5 transition-all cursor-pointer"
               title="New Project"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -141,7 +141,7 @@ export default function Sidebar() {
                 onKeyDown={(e) => e.key === 'Enter' && handleCreateProject()}
                 onBlur={() => !newProjectName && setShowNewProject(false)}
                 placeholder="Project name"
-                className="w-full px-3 py-2 bg-slate-800 text-white text-sm rounded-lg border border-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                className="w-full px-3 py-2 bg-slate-800 text-white text-sm rounded-lg border border-teal-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                 autoFocus
               />
             </div>
@@ -152,8 +152,8 @@ export default function Sidebar() {
             onClick={() => selectProject(null)}
             className={`w-full text-left px-3 py-2.5 rounded-lg mb-1.5 text-sm transition-colors duration-150 cursor-pointer border ${
               !currentProject
-                ? 'bg-blue-600/20 text-white border-blue-500/30'
-                : 'text-slate-300 hover:bg-slate-700/40 hover:text-white border-transparent'
+                ? 'bg-teal-500/20 text-white border-teal-400/30'
+                : 'text-teal-300 hover:bg-slate-700/40 hover:text-white border-transparent'
             }`}
           >
             <span className="flex items-center gap-2">
@@ -171,8 +171,8 @@ export default function Sidebar() {
                 onClick={() => selectProject(project)}
                 className={`w-full text-left px-3 py-2.5 rounded-lg mb-1.5 text-sm transition-colors duration-150 cursor-pointer border ${
                   currentProject?.id === project.id
-                    ? 'bg-blue-600/20 text-white border-blue-500/30'
-                    : 'text-slate-300 hover:bg-slate-700/40 hover:text-white border-transparent'
+                    ? 'bg-teal-500/20 text-white border-teal-400/30'
+                    : 'text-teal-300 hover:bg-slate-700/40 hover:text-white border-transparent'
                 }`}
               >
                 <span className="flex items-center gap-2">
@@ -207,7 +207,7 @@ export default function Sidebar() {
           <div className="flex items-center justify-between mb-3">
             <button
               onClick={() => setShowChatHistory(true)}
-              className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors group cursor-pointer"
+              className="flex items-center gap-2 text-teal-400 hover:text-white transition-colors group cursor-pointer"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z" />
@@ -218,7 +218,7 @@ export default function Sidebar() {
             </button>
           </div>
           {chats.length === 0 ? (
-            <p className="text-slate-500 text-xs text-center py-4">No chats yet</p>
+            <p className="text-teal-500 text-xs text-center py-4">No chats yet</p>
           ) : (
             chats.map((chat) => (
               <ChatItem

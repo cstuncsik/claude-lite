@@ -201,7 +201,7 @@ export default function MessageInput() {
   return (
     <form onSubmit={handleSubmit} className="max-w-5xl mx-auto">
         {/* Main Input Container */}
-        <div className="relative shadow-lg bg-slate-950 rounded-2xl border border-slate-700/50 focus-within:border-blue-500/50 focus-within:shadow-blue-500/10 transition-all">
+        <div className="relative shadow-lg bg-slate-950 rounded-2xl border border-slate-700/50 focus-within:border-teal-400/50 focus-within:shadow-blue-500/10 transition-all">
           {/* Textarea */}
           <textarea
             ref={textareaRef}
@@ -212,7 +212,7 @@ export default function MessageInput() {
             placeholder={currentChat ? 'Reply to Claude...' : 'Select or create a chat first...'}
             disabled={!currentChat || isSending}
             rows={1}
-            className="w-full bg-transparent text-white px-4 pt-4 pb-2 resize-none focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed placeholder:text-slate-500 overflow-hidden"
+            className="w-full bg-transparent text-white px-4 pt-4 pb-2 resize-none focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed placeholder:text-teal-500 overflow-hidden"
             style={{ minHeight: '56px', maxHeight: '200px' }}
           />
 
@@ -225,23 +225,23 @@ export default function MessageInput() {
                     <img
                       src={file.dataUrl}
                       alt="Attached"
-                      className="w-20 h-20 object-cover rounded-lg border border-slate-600"
+                      className="w-20 h-20 object-cover rounded-lg border border-teal-600"
                     />
                   ) : file.type === 'text' ? (
-                    <div className="w-20 h-20 flex flex-col items-center justify-center rounded-lg border border-green-600/50 bg-green-900/20 p-2">
-                      <svg className="w-8 h-8 text-green-400 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className="w-20 h-20 flex flex-col items-center justify-center rounded-lg border border-teal-500/50 bg-green-900/20 p-2">
+                      <svg className="w-8 h-8 text-teal-300 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                       </svg>
-                      <span className="text-xs text-green-400 text-center truncate w-full">
+                      <span className="text-xs text-teal-300 text-center truncate w-full">
                         {file.file.name.split('.').pop()?.toUpperCase()}
                       </span>
                     </div>
                   ) : (
-                    <div className="w-20 h-20 flex flex-col items-center justify-center rounded-lg border border-slate-600 bg-slate-800/50 p-2">
-                      <svg className="w-8 h-8 text-blue-400 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className="w-20 h-20 flex flex-col items-center justify-center rounded-lg border border-teal-600 bg-slate-800/50 p-2">
+                      <svg className="w-8 h-8 text-teal-300 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                       </svg>
-                      <span className="text-xs text-slate-400 text-center truncate w-full">
+                      <span className="text-xs text-teal-400 text-center truncate w-full">
                         {file.file.name.split('.').pop()?.toUpperCase()}
                       </span>
                     </div>
@@ -276,7 +276,7 @@ export default function MessageInput() {
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={!currentChat || isSending}
-                className="p-1.5 rounded-lg transition-colors cursor-pointer text-slate-500 hover:text-slate-400 hover:bg-slate-800/50 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="p-1.5 rounded-lg transition-colors cursor-pointer text-teal-500 hover:text-teal-400 hover:bg-slate-800/50 disabled:opacity-50 disabled:cursor-not-allowed"
                 title="Attach file"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -288,8 +288,8 @@ export default function MessageInput() {
                 onClick={() => setExtendedThinking(!extendedThinking)}
                 className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
                   extendedThinking
-                    ? 'bg-blue-600/20 text-blue-400'
-                    : 'text-slate-500 hover:text-slate-400 hover:bg-slate-800/50'
+                    ? 'bg-teal-500/20 text-teal-300'
+                    : 'text-teal-500 hover:text-teal-400 hover:bg-slate-800/50'
                 }`}
                 title="Extended thinking"
               >
@@ -298,7 +298,7 @@ export default function MessageInput() {
                 </svg>
               </button>
               {extendedThinking && (
-                <span className="text-xs text-blue-400 font-medium">Extended thinking enabled</span>
+                <span className="text-xs text-teal-300 font-medium">Extended thinking enabled</span>
               )}
             </div>
 
@@ -309,7 +309,7 @@ export default function MessageInput() {
                 <button
                   type="button"
                   onClick={() => setShowModelSelector(!showModelSelector)}
-                  className="px-3 py-1.5 text-sm font-medium text-slate-300 hover:text-white bg-slate-800/50 hover:bg-slate-800 rounded-lg transition-colors flex items-center gap-2 cursor-pointer"
+                  className="px-3 py-1.5 text-sm font-medium text-teal-300 hover:text-white bg-slate-800/50 hover:bg-slate-800 rounded-lg transition-colors flex items-center gap-2 cursor-pointer"
                 >
                   <span>{selectedModel.name}</span>
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -330,8 +330,8 @@ export default function MessageInput() {
                         }}
                         className={`w-full text-left px-4 py-2.5 text-sm transition-colors cursor-pointer ${
                           selectedModel.id === model.id
-                            ? 'bg-blue-600/20 text-blue-400'
-                            : 'text-slate-300 hover:bg-slate-700/50 hover:text-white'
+                            ? 'bg-teal-500/20 text-teal-300'
+                            : 'text-teal-300 hover:bg-slate-700/50 hover:text-white'
                         }`}
                       >
                         {model.name}
@@ -348,7 +348,7 @@ export default function MessageInput() {
                 className={`p-2 text-white rounded-lg transition-all ${
                   !currentChat || !input.trim() || isSending
                     ? 'bg-slate-800 opacity-50 cursor-not-allowed'
-                    : 'bg-gradient-to-r from-blue-600 to-violet-600 hover:from-blue-500 hover:to-violet-500 shadow-lg shadow-blue-900/30 cursor-pointer'
+                    : 'bg-gradient-to-r from-teal-500 to-orange-500 hover:from-teal-400 hover:to-orange-400 shadow-lg shadow-blue-900/30 cursor-pointer'
                 }`}
                 title="Send message"
               >
