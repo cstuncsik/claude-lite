@@ -40,7 +40,8 @@ export interface Message {
   images?: MessageImage[];
   documents?: MessageDocument[];
   model?: string;
-  extended_thinking?: boolean;
+  // boolean for optimistic local messages; number (0/1) when loaded from SQLite
+  extended_thinking?: boolean | number;
   created_at: string;
 }
 

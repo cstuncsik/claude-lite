@@ -91,6 +91,70 @@ pub struct StreamChunk {
     pub done: bool,
 }
 
+/// Convert a stored message's text + optional base64 image/document JSON into the
+/// Anthropic request content shape. Returns plain text when there are no
+/// attachments; otherwise a block list with the text first (if any), then images,
+/// then documents. Malformed attachment JSON is skipped rather than failing.
+fn build_content(content: &str, images: Option<&str>, documents: Option<&str>) -> MessageContent {
+    let has_images = images.map(|s| !s.is_empty()).unwrap_or(false);
+    let has_documents = documents.map(|s| !s.is_empty()).unwrap_or(false);
+
+    if !has_images && !has_documents {
+        return MessageContent::Text(content.to_string());
+    }
+
+    let mut blocks = Vec::new();
+
+    // Add text first if present
+    if !content.is_empty() {
+        blocks.push(ContentBlock::Text {
+            text: content.to_string(),
+        });
+    }
+
+    // Add images
+    if let Some(images_json) = images {
+        if let Ok(images) = serde_json::from_str::<Vec<serde_json::Value>>(images_json) {
+            for image in images {
+                if let (Some(data), Some(media_type)) = (
+                    image.get("data").and_then(|v| v.as_str()),
+                    image.get("media_type").and_then(|v| v.as_str()),
+                ) {
+                    blocks.push(ContentBlock::Image {
+                        source: ImageSource {
+                            source_type: "base64".to_string(),
+                            media_type: media_type.to_string(),
+                            data: data.to_string(),
+                        },
+                    });
+                }
+            }
+        }
+    }
+
+    // Add documents
+    if let Some(documents_json) = documents {
+        if let Ok(documents) = serde_json::from_str::<Vec<serde_json::Value>>(documents_json) {
+            for document in documents {
+                if let (Some(data), Some(media_type)) = (
+                    document.get("data").and_then(|v| v.as_str()),
+                    document.get("media_type").and_then(|v| v.as_str()),
+                ) {
+                    blocks.push(ContentBlock::Document {
+                        source: DocumentSource {
+                            source_type: "base64".to_string(),
+                            media_type: media_type.to_string(),
+                            data: data.to_string(),
+                        },
+                    });
+                }
+            }
+        }
+    }
+
+    MessageContent::Blocks(blocks)
+}
+
 pub async fn stream_chat_completion(
     app: AppHandle,
     api_key: String,
@@ -101,69 +165,9 @@ pub async fn stream_chat_completion(
     // Convert messages to Anthropic format
     let anthropic_messages: Vec<AnthropicMessage> = messages
         .iter()
-        .map(|m| {
-            let has_images = m.images.as_ref().map(|s| !s.is_empty()).unwrap_or(false);
-            let has_documents = m.documents.as_ref().map(|s| !s.is_empty()).unwrap_or(false);
-
-            let content = if has_images || has_documents {
-                let mut blocks = Vec::new();
-
-                // Add text first if present
-                if !m.content.is_empty() {
-                    blocks.push(ContentBlock::Text {
-                        text: m.content.clone(),
-                    });
-                }
-
-                // Add images
-                if let Some(images_json) = &m.images {
-                    if let Ok(images) = serde_json::from_str::<Vec<serde_json::Value>>(images_json) {
-                        for image in images {
-                            if let (Some(data), Some(media_type)) = (
-                                image.get("data").and_then(|v| v.as_str()),
-                                image.get("media_type").and_then(|v| v.as_str()),
-                            ) {
-                                blocks.push(ContentBlock::Image {
-                                    source: ImageSource {
-                                        source_type: "base64".to_string(),
-                                        media_type: media_type.to_string(),
-                                        data: data.to_string(),
-                                    },
-                                });
-                            }
-                        }
-                    }
-                }
-
-                // Add documents
-                if let Some(documents_json) = &m.documents {
-                    if let Ok(documents) = serde_json::from_str::<Vec<serde_json::Value>>(documents_json) {
-                        for document in documents {
-                            if let (Some(data), Some(media_type)) = (
-                                document.get("data").and_then(|v| v.as_str()),
-                                document.get("media_type").and_then(|v| v.as_str()),
-                            ) {
-                                blocks.push(ContentBlock::Document {
-                                    source: DocumentSource {
-                                        source_type: "base64".to_string(),
-                                        media_type: media_type.to_string(),
-                                        data: data.to_string(),
-                                    },
-                                });
-                            }
-                        }
-                    }
-                }
-
-                MessageContent::Blocks(blocks)
-            } else {
-                MessageContent::Text(m.content.clone())
-            };
-
-            AnthropicMessage {
-                role: m.role.clone(),
-                content,
-            }
+        .map(|m| AnthropicMessage {
+            role: m.role.clone(),
+            content: build_content(&m.content, m.images.as_deref(), m.documents.as_deref()),
         })
         .collect();
 
@@ -316,4 +320,137 @@ pub async fn generate_chat_title(
         .unwrap_or_else(|| "New Chat".to_string());
 
     Ok(title)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::json;
+
+    #[test]
+    fn build_content_text_only_returns_text() {
+        match build_content("hello", None, None) {
+            MessageContent::Text(t) => assert_eq!(t, "hello"),
+            _ => panic!("expected text content"),
+        }
+    }
+
+    #[test]
+    fn build_content_treats_empty_strings_as_no_attachments() {
+        assert!(matches!(
+            build_content("hi", Some(""), Some("")),
+            MessageContent::Text(_)
+        ));
+    }
+
+    #[test]
+    fn build_content_puts_text_first_then_image_block() {
+        let images = json!([{ "data": "AAAA", "media_type": "image/png" }]).to_string();
+        let blocks = match build_content("look", Some(&images), None) {
+            MessageContent::Blocks(b) => b,
+            _ => panic!("expected blocks"),
+        };
+        assert_eq!(blocks.len(), 2);
+        assert!(matches!(blocks[0], ContentBlock::Text { .. }));
+        match &blocks[1] {
+            ContentBlock::Image { source } => {
+                assert_eq!(source.source_type, "base64");
+                assert_eq!(source.media_type, "image/png");
+                assert_eq!(source.data, "AAAA");
+            }
+            _ => panic!("expected image block"),
+        }
+    }
+
+    #[test]
+    fn build_content_emits_document_block_without_leading_text_when_content_empty() {
+        let docs =
+            json!([{ "data": "BBBB", "media_type": "application/pdf", "name": "f.pdf" }]).to_string();
+        let blocks = match build_content("", None, Some(&docs)) {
+            MessageContent::Blocks(b) => b,
+            _ => panic!("expected blocks"),
+        };
+        assert_eq!(blocks.len(), 1);
+        match &blocks[0] {
+            ContentBlock::Document { source } => {
+                assert_eq!(source.source_type, "base64");
+                assert_eq!(source.media_type, "application/pdf");
+                assert_eq!(source.data, "BBBB");
+            }
+            _ => panic!("expected document block"),
+        }
+    }
+
+    #[test]
+    fn build_content_skips_malformed_attachment_json() {
+        let blocks = match build_content("", Some("not json"), None) {
+            MessageContent::Blocks(b) => b,
+            _ => panic!("expected blocks"),
+        };
+        assert!(blocks.is_empty());
+    }
+
+    #[test]
+    fn content_block_image_serializes_with_type_tags() {
+        let block = ContentBlock::Image {
+            source: ImageSource {
+                source_type: "base64".to_string(),
+                media_type: "image/png".to_string(),
+                data: "AAAA".to_string(),
+            },
+        };
+        let v = serde_json::to_value(&block).unwrap();
+        assert_eq!(v["type"], "image");
+        assert_eq!(v["source"]["type"], "base64");
+        assert_eq!(v["source"]["media_type"], "image/png");
+        assert_eq!(v["source"]["data"], "AAAA");
+    }
+
+    #[test]
+    fn request_omits_none_system_and_thinking() {
+        let req = AnthropicRequest {
+            model: "m".to_string(),
+            max_tokens: 10,
+            temperature: 1.0,
+            system: None,
+            messages: vec![],
+            stream: true,
+            thinking: None,
+        };
+        let v = serde_json::to_value(&req).unwrap();
+        assert!(v.get("system").is_none());
+        assert!(v.get("thinking").is_none());
+        assert_eq!(v["stream"], true);
+    }
+
+    #[test]
+    fn thinking_config_serializes_with_renamed_type() {
+        let v = serde_json::to_value(&ThinkingConfig {
+            thinking_type: "enabled".to_string(),
+            budget_tokens: 10000,
+        })
+        .unwrap();
+        assert_eq!(v["type"], "enabled");
+        assert_eq!(v["budget_tokens"], 10000);
+    }
+
+    #[test]
+    fn message_content_is_untagged() {
+        let text = serde_json::to_value(MessageContent::Text("hi".to_string())).unwrap();
+        assert!(text.is_string());
+
+        let blocks = serde_json::to_value(MessageContent::Blocks(vec![ContentBlock::Text {
+            text: "hi".to_string(),
+        }]))
+        .unwrap();
+        assert!(blocks.is_array());
+    }
+
+    #[test]
+    fn stream_event_parses_content_block_delta() {
+        let data = r#"{"type":"content_block_delta","delta":{"type":"text_delta","text":"Hello"}}"#;
+        let event: StreamEvent = serde_json::from_str(data).unwrap();
+        assert_eq!(event.event_type, "content_block_delta");
+        assert_eq!(event.delta.unwrap().text.unwrap(), "Hello");
+    }
 }

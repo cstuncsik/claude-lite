@@ -99,3 +99,35 @@ impl Message {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn project_settings_applies_all_defaults_from_empty_json() {
+        let s: ProjectSettings = serde_json::from_str("{}").unwrap();
+        assert_eq!(s.model, "claude-sonnet-4-5-20250929");
+        assert_eq!(s.max_tokens, 4096);
+        assert_eq!(s.temperature, 1.0);
+        assert!(s.system_prompt.is_none());
+    }
+
+    #[test]
+    fn project_settings_partial_json_fills_remaining_defaults() {
+        let s: ProjectSettings =
+            serde_json::from_str(r#"{"model":"custom","max_tokens":100}"#).unwrap();
+        assert_eq!(s.model, "custom");
+        assert_eq!(s.max_tokens, 100);
+        assert_eq!(s.temperature, 1.0);
+    }
+
+    #[test]
+    fn project_settings_default_impl_matches_expected() {
+        let s = ProjectSettings::default();
+        assert_eq!(s.model, "claude-sonnet-4-5-20250929");
+        assert_eq!(s.max_tokens, 4096);
+        assert_eq!(s.temperature, 1.0);
+        assert!(s.system_prompt.is_none());
+    }
+}
