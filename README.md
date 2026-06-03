@@ -19,13 +19,14 @@ A lightweight desktop client for Claude AI with local data persistence.
 
 - [Rust](https://rustup.rs/) (latest stable)
 - [Node.js](https://nodejs.org/) (v18 or later)
+- [pnpm](https://pnpm.io/) (v9 or later)
 - [Anthropic API Key](https://console.anthropic.com/)
 
 ## Setup
 
 1. **Install dependencies**
    ```bash
-   npm install
+   pnpm install
    ```
 
 2. **Configure API Key**
@@ -42,7 +43,7 @@ A lightweight desktop client for Claude AI with local data persistence.
 
 3. **Run in development mode**
    ```bash
-   npm run tauri dev
+   pnpm tauri dev
    ```
 
 ## Troubleshooting
@@ -54,7 +55,7 @@ If you encounter issues, see [TROUBLESHOOTING.md](TROUBLESHOOTING.md) for common
 Build the application for your platform:
 
 ```bash
-npm run tauri build
+pnpm tauri build
 ```
 
 The built application will be in `src-tauri/target/release/bundle/`.

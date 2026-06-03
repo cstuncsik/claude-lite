@@ -77,8 +77,8 @@ cargo check --manifest-path src-tauri/Cargo.toml
 ```bash
 # Clean build
 rm -rf node_modules dist
-npm install
-npm run build
+pnpm install
+pnpm build
 ```
 
 ### 4. Tailwind CSS Not Working
@@ -137,7 +137,7 @@ lsof -ti:1420 | xargs kill -9
    ```
 2. Reinstall dependencies:
    ```bash
-   npm install
+   pnpm install
    ```
 3. Check for port conflicts (see #5)
 
@@ -167,7 +167,7 @@ rmdir /s %APPDATA%\claude-lite
 ```
 
 ### Viewing Logs
-Dev mode logs appear in the terminal where you ran `npm run tauri dev`.
+Dev mode logs appear in the terminal where you ran `pnpm tauri dev`.
 
 ### Debug Mode
 Add to your `.env`:
